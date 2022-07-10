@@ -178,11 +178,11 @@ executors:
           MB_PRESTO_JDBC_TEST_HOST: localhost
           MB_PRESTO_JDBC_TEST_PORT: 8443
           MB_PRESTO_JDBC_TEST_SSL: true
+          MB_PRESTO_JDBC_TEST_SSL_TRUSTSTORE_PATH: /tmp/cacerts-with-presto-ssl.jks
+          MB_PRESTO_JDBC_TEST_SSL_TRUSTSTORE_PASSWORD: changeit
           MB_PRESTO_JDBC_TEST_USER: metabase
           MB_PRESTO_JDBC_TEST_PASSWORD: metabase
           MB_ENABLE_PRESTO_JDBC_DRIVER: true
-          MB_PRESTO_JDBC_TEST_ADDITIONAL_OPTIONS: >
-            SSLTrustStorePath=/tmp/cacerts-with-presto-ssl.jks&SSLTrustStorePassword=changeit
     # (see above)
     resource_class: large
 

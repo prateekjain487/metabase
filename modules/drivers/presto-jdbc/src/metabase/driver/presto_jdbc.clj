@@ -18,6 +18,7 @@
             [metabase.driver.sql-jdbc.sync.describe-database :as sql-jdbc.describe-database]
             [metabase.driver.sql.parameters.substitution :as sql.params.substitution]
             [metabase.driver.sql.query-processor :as sql.qp]
+            [metabase.models.secret :as secret]
             [metabase.query-processor.timezone :as qp.timezone]
             [metabase.util :as u]
             [metabase.util.date-2 :as u.date]
@@ -208,16 +209,20 @@
       remove-blank-vals
       (set/rename-keys kerb-props->url-param-names))))
 
-(defn- prepare-addl-opts [{:keys [SSL kerberos additional-options] :as details}]
+(defn- append-additional-options [additional-options props]
+  (let [opts-str (sql-jdbc.common/additional-opts->string :url props)]
+    (if (str/blank? additional-options)
+      opts-str
+      (str additional-options "&" opts-str))))
+
+(defn- prepare-addl-opts [{:keys [SSL kerberos] :as details}]
   (let [det (if kerberos
               (if-not SSL
                 (throw (ex-info (trs "SSL must be enabled to use Kerberos authentication")
                                 {:db-details details}))
                 (update details
                         :additional-options
-                        str
-                        ;; add separator if there are already additional-options
-                        (when-not (str/blank? additional-options) "&")
+                        append-additional-options
                         ;; convert Kerberos options map to URL string
                         (sql-jdbc.common/additional-opts->string :url (details->kerberos-url-params details))))
               details)]
@@ -257,6 +262,27 @@
     (Boolean/parseBoolean v)
     v))
 
+(defn- maybe-add-ssl-stores [details-map]
+  (let [props
+        (cond-> {}
+          (str->bool (:ssl-use-keystore details-map))
+          (assoc :SSLKeyStorePath (-> (secret/db-details-prop->secret-map details-map "ssl-keystore")
+                                      (secret/value->file! :presto-jdbc)
+                                      .getCanonicalPath)
+                 :SSLKeyStorePassword (secret/value->string
+                                       (secret/db-details-prop->secret-map details-map "ssl-keystore-password")))
+          (str->bool (:ssl-use-truststore details-map))
+          (assoc :SSLTrustStorePath (-> (secret/db-details-prop->secret-map details-map "ssl-truststore")
+                                        (secret/value->file! :presto-jdbc)
+                                        .getCanonicalPath)
+                 :SSLTrustStorePassword (secret/value->string
+                                         (secret/db-details-prop->secret-map details-map "ssl-truststore-password"))))]
+    (cond-> details-map
+      (seq props)
+      (update :additional-options
+              append-additional-options
+              (sql-jdbc.common/additional-opts->string :url props)))))
+
 (defmethod sql-jdbc.conn/connection-details->spec :presto-jdbc
   [_ details-map]
   (let [props (-> details-map
@@ -267,6 +293,7 @@
                 (update :ssl str->bool)
                 (update :kerberos str->bool)
                 (assoc :SSL (:ssl details-map))
+                maybe-add-ssl-stores
                 ;; remove any Metabase specific properties that are not recognized by the PrestoDB JDBC driver, which is
                 ;; very picky about properties (throwing an error if any are unrecognized)
                 ;; all valid properties can be found in the JDBC Driver source here:
