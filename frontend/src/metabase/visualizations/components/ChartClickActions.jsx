@@ -148,7 +148,7 @@ class ChartClickActions extends Component {
     const groupedClickActions = _.groupBy(clickActions, "section");
     if (groupedClickActions["sum"] && groupedClickActions["sum"].length === 1) {
       // if there's only one "sum" click action, merge it into "summarize" and change its button type and icon
-      groupedClickActions["summarize"].push({
+      groupedClickActions?.["summarize"]?.push({
         ...groupedClickActions["sum"][0],
         buttonType: "horizontal",
         icon: "number",
