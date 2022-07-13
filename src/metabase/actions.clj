@@ -10,7 +10,8 @@
    [metabase.models.setting :as setting]
    [metabase.util :as u]
    [metabase.util.i18n :as i18n]
-   [schema.core :as schema]))
+   [schema.core :as schema]
+   [metabase.query-processor.middleware.normalize-query :as normalize]))
 
 (setting/defsetting experimental-enable-actions
   (i18n/deferred-tru "Whether to enable using the new experimental Actions features globally. (Actions must also be enabled for each Database.)")
@@ -263,3 +264,31 @@
 (defmethod action-arg-map-spec :row/delete
   [_action]
   :actions.args.crud/row.delete)
+
+(s/def :actions.args.crud/bulk.delete
+  (s/coll-of :actions.args.crud/row.delete))
+
+(defmethod action-arg-map-spec :bulk/delete
+  [_action]
+  :actions.args.crud/bulk.delete)
+
+{:url "/bulk/delete/3"
+ :body [[:= [:field 51 nil] 1]
+        [:= [:field 51 nil] 2]]}
+
+
+;; (s/explain-data :actions.args.crud/row.delete
+;;                 {:database 2
+;;                  :type :query
+;;                  :query {:source-table 29
+;;                          :filter [:= [:field 51 nil] 1]}})
+
+;; (s/explain-data :actions.args.crud/bulk.delete
+;;                [{:database 2
+;;                  :type :query
+;;                  :query {:source-table 29
+;;                          :filter [:= [:field 51 nil] 1]}}
+;;                 {:database 2
+;;                  :type :query
+;;                  :query {:source-table 29
+;;                          :filter [:= [:field 51 nil] 2]}}])
