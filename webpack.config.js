@@ -68,6 +68,12 @@ const config = (module.exports = {
   module: {
     rules: [
       {
+        test: /\.m?js$/,
+        resolve: {
+          fullySpecified: false,
+        },
+      },
+      {
         test: /\.(tsx?|jsx?)$/,
         exclude: /node_modules|cljs/,
         use: [{ loader: "babel-loader", options: BABEL_CONFIG }],

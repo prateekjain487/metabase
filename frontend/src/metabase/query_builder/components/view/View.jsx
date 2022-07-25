@@ -351,7 +351,7 @@ class View extends React.Component {
       topQuery && topQuery.hasBreakouts() ? this.handleEditBreakout : null;
 
     const isSidebarOpen = leftSidebar || rightSidebar;
-
+    const key = "to-download-" + new Date().getTime();
     return (
       <QueryBuilderMain isSidebarOpen={isSidebarOpen}>
         {isNative ? (
@@ -374,16 +374,18 @@ class View extends React.Component {
           <QueryValidationError error={validationError} />
         ) : (
           <StyledDebouncedFrame enabled={!isLiveResizable}>
-            <QueryVisualization
-              {...this.props}
-              noHeader
-              className="spread"
-              onAddSeries={onAddSeries}
-              onEditSeries={onEditSeries}
-              onRemoveSeries={onRemoveSeries}
-              onEditBreakout={onEditBreakout}
-              mode={queryMode}
-            />
+            <div id={key} style={{ height: "100%" }}>
+              <QueryVisualization
+                {...this.props}
+                noHeader
+                className="spread"
+                onAddSeries={onAddSeries}
+                onEditSeries={onEditSeries}
+                onRemoveSeries={onRemoveSeries}
+                onEditBreakout={onEditBreakout}
+                mode={queryMode}
+              />
+            </div>
           </StyledDebouncedFrame>
         )}
 
@@ -391,7 +393,7 @@ class View extends React.Component {
           <ModeFooter {...this.props} className="flex-no-shrink" />
         )}
 
-        <ViewFooter {...this.props} className="flex-no-shrink" />
+        <ViewFooter k={key} {...this.props} className="flex-no-shrink" />
       </QueryBuilderMain>
     );
   };

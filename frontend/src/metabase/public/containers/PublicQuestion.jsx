@@ -179,12 +179,16 @@ class PublicQuestion extends Component {
     } = this.props;
     const { card, result, initialized, parameterValues } = this.state;
 
+    const key = "to-download-" + new Date().getTime();
+
     const actionButtons = result && (
       <QueryDownloadWidget
         className="m1 text-medium-hover"
         uuid={uuid}
         token={token}
         result={result}
+        k={key}
+        key={key || "public"}
       />
     );
 
