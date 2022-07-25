@@ -5,6 +5,9 @@ import PropTypes from "prop-types";
 import { color } from "metabase/lib/colors";
 import { extractQueryParams } from "metabase/lib/urls";
 
+import jspdf from "jspdf";
+import html2canvas from "html2canvas";
+
 import Icon from "metabase/components/Icon";
 import Label from "metabase/components/type/Label";
 import { FormButton } from "./DownloadButton.styled";
@@ -16,6 +19,10 @@ function colorForType(type) {
     case "xlsx":
       return color("summarize");
     case "json":
+      return color("bg-dark");
+    case "pdf":
+      return color("bg-dark");
+    case "jpg":
       return color("bg-dark");
     default:
       return color("brand");
@@ -33,9 +40,45 @@ const retrieveFilename = ({ res, type }) => {
   return fileName;
 };
 
+const convertPDF = (key, onDownloadRejected) => {
+  console.log(key);
+  const input = document.getElementById(key);
+  console.log(input);
+  html2canvas(input)
+    .then(async canvas => {
+      const imgWidth = 210;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const imgData = canvas.toDataURL("image/jpeg");
+      const pdf = new jspdf();
+      pdf.addImage(imgData, "JPEG", 0, 0, imgWidth, imgHeight);
+      pdf.save(`query_result_${new Date().toLocaleString()}.pdf`);
+    })
+    .catch(e => {
+      console.log(e);
+      onDownloadRejected();
+    });
+};
+const convertJPEG = (key, onDownloadRejected) => {
+  const input = document.getElementById(key);
+  console.log(input);
+  html2canvas(input)
+    .then(async canvas => {
+      const imgData = canvas.toDataURL("image/jpeg");
+      const link = document.createElement("a");
+      link.download = `query_result_${new Date().toLocaleString()}.jpg`;
+      link.href = imgData;
+      link.click();
+    })
+    .catch(e => {
+      console.log(e);
+      onDownloadRejected();
+    });
+};
+
 const handleSubmit = async (
   e,
   {
+    k,
     method,
     url,
     type,
@@ -47,6 +90,16 @@ const handleSubmit = async (
   e.preventDefault();
 
   onDownloadStart();
+
+  if (type === "pdf") {
+    convertPDF(k, onDownloadRejected);
+    onDownloadResolved();
+    return;
+  } else if (type === "jpg") {
+    convertJPEG(k, onDownloadRejected);
+    onDownloadResolved();
+    return;
+  }
 
   const formData = new URLSearchParams(new FormData(e.target));
 
@@ -82,6 +135,8 @@ const handleSubmit = async (
 const DownloadButton = ({
   children,
   method,
+  k,
+  key,
   url,
   params,
   extensions,
@@ -89,39 +144,48 @@ const DownloadButton = ({
   onDownloadResolved,
   onDownloadRejected,
   ...props
-}) => (
-  <div>
-    <form
-      onSubmit={e =>
-        handleSubmit(e, {
-          method,
-          url,
-          type: children,
-          onDownloadStart,
-          onDownloadResolved,
-          onDownloadRejected,
-        })
-      }
-    >
-      {params && extractQueryParams(params).map(getInput)}
-      <FormButton
-        className="text-white-hover bg-brand-hover rounded cursor-pointer full hover-parent hover--inherit"
-        onClick={e => {
-          if (window.OSX) {
-            // prevent form from being submitted normally
-            e.preventDefault();
-            // download using the API provided by the OS X app
-            window.OSX.download(method, url, params, extensions);
-          }
-        }}
-        {...props}
+}) => {
+  // console.log(k);
+  return (
+    <div>
+      <form
+        onSubmit={e =>
+          handleSubmit(e, {
+            k,
+            method,
+            url,
+            type: children,
+            onDownloadStart,
+            onDownloadResolved,
+            onDownloadRejected,
+          })
+        }
       >
-        <Icon name={children} size={32} mr={1} color={colorForType(children)} />
-        <Label my={0}>.{children}</Label>
-      </FormButton>
-    </form>
-  </div>
-);
+        {params && extractQueryParams(params).map(getInput)}
+        <FormButton
+          className="text-white-hover bg-brand-hover rounded cursor-pointer full hover-parent hover--inherit"
+          onClick={e => {
+            if (window.OSX) {
+              // prevent form from being submitted normally
+              e.preventDefault();
+              // download using the API provided by the OS X app
+              window.OSX.download(method, url, params, extensions);
+            }
+          }}
+          {...props}
+        >
+          <Icon
+            name={children}
+            size={32}
+            mr={1}
+            color={colorForType(children)}
+          />
+          <Label my={0}>.{children}</Label>
+        </FormButton>
+      </form>
+    </div>
+  );
+};
 
 const getInput = ([name, value]) => (
   <input key={name} type="hidden" name={name} value={value} />

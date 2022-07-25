@@ -5,7 +5,7 @@ import { question, dataset, tableRowsQuery } from "./questions";
 import { pulse } from "./pulses";
 import { appendSlug } from "./utils";
 
-export const exportFormats = ["csv", "xlsx", "json"];
+export const exportFormats = ["csv", "xlsx", "json", "pdf", "jpg"];
 
 export function accountSettings() {
   return "/account/profile";

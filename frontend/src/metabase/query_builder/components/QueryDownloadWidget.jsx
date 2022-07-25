@@ -35,6 +35,8 @@ const QueryDownloadWidget = ({
   classNameClose,
   card,
   result,
+  k,
+  key,
   uuid,
   token,
   dashcardId,
@@ -43,6 +45,7 @@ const QueryDownloadWidget = ({
   visualizationSettings,
 }) => {
   const [status, setStatus] = useState(`idle`);
+  // console.log("Here is the",k)
 
   return (
     <PopoverWithTrigger
@@ -70,6 +73,7 @@ const QueryDownloadWidget = ({
                 {dashcardId && token ? (
                   <DashboardEmbedQueryButton
                     key={type}
+                    k={k}
                     type={type}
                     dashcardId={dashcardId}
                     token={token}
@@ -85,6 +89,7 @@ const QueryDownloadWidget = ({
                 ) : uuid ? (
                   <PublicQueryButton
                     key={type}
+                    k={k}
                     type={type}
                     uuid={uuid}
                     result={result}
@@ -98,6 +103,7 @@ const QueryDownloadWidget = ({
                 ) : token ? (
                   <EmbedQueryButton
                     key={type}
+                    k={k}
                     type={type}
                     token={token}
                     onDownloadStart={() => {
@@ -110,6 +116,7 @@ const QueryDownloadWidget = ({
                 ) : card && card.id ? (
                   <SavedQueryButton
                     key={type}
+                    k={k}
                     type={type}
                     card={card}
                     result={result}
@@ -124,6 +131,7 @@ const QueryDownloadWidget = ({
                 ) : card && !card.id ? (
                   <UnsavedQueryButton
                     key={type}
+                    k={k}
                     type={type}
                     result={result}
                     visualizationSettings={visualizationSettings}
@@ -145,6 +153,7 @@ const QueryDownloadWidget = ({
 };
 
 const UnsavedQueryButton = ({
+  k,
   type,
   result: { json_query = {} },
   visualizationSettings,
@@ -153,6 +162,7 @@ const UnsavedQueryButton = ({
   onDownloadRejected,
 }) => (
   <DownloadButton
+    k={k}
     url={`api/dataset/${type}`}
     params={{
       query: JSON.stringify(_.omit(json_query, "constraints")),
@@ -168,6 +178,7 @@ const UnsavedQueryButton = ({
 );
 
 const SavedQueryButton = ({
+  k,
   type,
   result: { json_query = {} },
   card,
@@ -176,6 +187,7 @@ const SavedQueryButton = ({
   onDownloadRejected,
 }) => (
   <DownloadButton
+    k={k}
     url={`api/card/${card.id}/query/${type}`}
     params={{ parameters: JSON.stringify(json_query.parameters) }}
     extensions={[type]}
@@ -188,6 +200,7 @@ const SavedQueryButton = ({
 );
 
 const PublicQueryButton = ({
+  k,
   type,
   uuid,
   result: { json_query = {} },
@@ -196,6 +209,7 @@ const PublicQueryButton = ({
   onDownloadRejected,
 }) => (
   <DownloadButton
+    k={k}
     method="GET"
     url={Urls.publicQuestion(uuid, type)}
     params={{ parameters: JSON.stringify(json_query.parameters) }}
@@ -209,6 +223,7 @@ const PublicQueryButton = ({
 );
 
 const EmbedQueryButton = ({
+  k,
   type,
   token,
   onDownloadStart,
@@ -224,6 +239,7 @@ const EmbedQueryButton = ({
 
   return (
     <DownloadButton
+      k={k}
       method="GET"
       url={Urls.embedCard(token, type)}
       params={params}
@@ -238,6 +254,7 @@ const EmbedQueryButton = ({
 };
 
 const DashboardEmbedQueryButton = ({
+  k,
   type,
   dashcardId,
   token,
@@ -248,6 +265,7 @@ const DashboardEmbedQueryButton = ({
   onDownloadRejected,
 }) => (
   <DownloadButton
+    k={k}
     method="GET"
     url={`api/embed/dashboard/${token}/dashcard/${dashcardId}/card/${card.id}/${type}`}
     extensions={[type]}
@@ -284,6 +302,7 @@ QueryDownloadWidget.propTypes = {
   uuid: PropTypes.string,
   icon: PropTypes.string,
   params: PropTypes.object,
+  k: PropTypes.string,
 };
 
 QueryDownloadWidget.defaultProps = {
