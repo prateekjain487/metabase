@@ -181,9 +181,12 @@ export default class DashCard extends Component {
       isEditing && clickBehaviorSidebarDashcard == null && !isEditingParameter;
 
     const gridSize = { width: dashcard.sizeX, height: dashcard.sizeY };
+    // console.log("----------------======");
+    const key = "to-download-" + new Date().getTime();
 
     return (
       <div
+        id={key}
         className={cx(
           "Card bordered rounded flex flex-column hover-parent hover--visibility",
           {
@@ -192,7 +195,12 @@ export default class DashCard extends Component {
         )}
         style={
           hideBackground
-            ? { border: 0, background: "transparent", boxShadow: "none" }
+            ? {
+                border: 0,
+                background: "transparent",
+                boxShadow: "none",
+                height: "100%",
+              }
             : null
         }
       >
@@ -242,12 +250,14 @@ export default class DashCard extends Component {
             isEmbed ? (
               <QueryDownloadWidget
                 className="m1 text-brand-hover text-light"
-                classNameClose="hover-child"
+                // classNameClose="hover-child"
                 card={dashcard.card}
                 params={parameterValuesBySlug}
                 dashcardId={dashcard.id}
                 token={dashcard.dashboard_id}
                 icon="download"
+                key="card"
+                k={key}
               />
             ) : null
           }

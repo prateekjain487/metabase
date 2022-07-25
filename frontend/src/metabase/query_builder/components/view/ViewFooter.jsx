@@ -38,6 +38,7 @@ import {
 } from "metabase/visualizations";
 
 const ViewFooter = ({
+  k,
   question,
   result,
   className,
@@ -174,6 +175,7 @@ const ViewFooter = ({
           QueryDownloadWidget.shouldRender({ result, isResultDirty }) && (
             <QueryDownloadWidget
               key="download"
+              k={k}
               className="mx1 hide sm-show"
               card={question.card()}
               result={result}
