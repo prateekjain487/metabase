@@ -179,7 +179,7 @@ class PublicQuestion extends Component {
     } = this.props;
     const { card, result, initialized, parameterValues } = this.state;
 
-    const key = "to-download-" + new Date().getTime();
+    const key = "to-download-public" + new Date().getTime();
 
     const actionButtons = result && (
       <QueryDownloadWidget
@@ -196,8 +196,11 @@ class PublicQuestion extends Component {
       card &&
       getCardUiParameters(card, metadata, {}, card.parameters || undefined);
 
+    // console.log("Parameters",card)
+
     return (
       <EmbedFrame
+        display={card && card.display}
         name={card && card.name}
         description={card && card.description}
         actionButtons={actionButtons}
@@ -212,26 +215,28 @@ class PublicQuestion extends Component {
           noWrapper
         >
           {() => (
-            <Visualization
-              error={result && result.error}
-              rawSeries={[{ card: card, data: result && result.data }]}
-              className="full flex-full z1"
-              onUpdateVisualizationSettings={settings =>
-                this.setState({
-                  result: updateIn(
-                    result,
-                    ["card", "visualization_settings"],
-                    s => ({ ...s, ...settings }),
-                  ),
-                })
-              }
-              gridUnit={12}
-              showTitle={false}
-              isDashboard
-              mode={PublicMode}
-              metadata={this.props.metadata}
-              onChangeCardAndRun={() => {}}
-            />
+            <div id={key} style={{ height: "100%" }}>
+              <Visualization
+                error={result && result.error}
+                rawSeries={[{ card: card, data: result && result.data }]}
+                className="full flex-full z1"
+                onUpdateVisualizationSettings={settings =>
+                  this.setState({
+                    result: updateIn(
+                      result,
+                      ["card", "visualization_settings"],
+                      s => ({ ...s, ...settings }),
+                    ),
+                  })
+                }
+                gridUnit={12}
+                showTitle={false}
+                isDashboard
+                mode={PublicMode}
+                metadata={this.props.metadata}
+                onChangeCardAndRun={() => {}}
+              />
+            </div>
           )}
         </LoadingAndErrorWrapper>
       </EmbedFrame>

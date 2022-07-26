@@ -32,6 +32,7 @@ class EmbedFrame extends Component {
 
   render() {
     const {
+      display,
       className,
       children,
       description,
@@ -48,8 +49,8 @@ class EmbedFrame extends Component {
       ...parseHashOptions(location.hash),
     };
     const showFooter =
-      !MetabaseSettings.hideEmbedBranding() ||
-      (!hide_download_button && actionButtons);
+      MetabaseSettings.hideEmbedBranding() ||
+      (hide_download_button && actionButtons);
 
     const name = titled ? this.props.name : null;
 
@@ -67,8 +68,8 @@ class EmbedFrame extends Component {
           })}
         >
           {name || parameters?.length > 0 ? (
-            <div className="EmbedFrame-header flex flex-column p1 sm-p2 lg-p3">
-              {name && (
+            <div className="EmbedFrame-header flex p1 sm-p2 lg-p3">
+              {name && display !== "scalar" && display !== "smartscalar" && (
                 <TitleAndDescription
                   title={name}
                   description={description}
@@ -89,6 +90,11 @@ class EmbedFrame extends Component {
                   />
                 </div>
               ) : null}
+              {actionButtons && (
+                <div className="flex-align-right my2 text-medium">
+                  {actionButtons}
+                </div>
+              )}
             </div>
           ) : null}
           <div className="flex flex-column relative full flex-full">
