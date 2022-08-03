@@ -1,9 +1,7 @@
 /* eslint-disable react/prop-types */
 import React, { Component } from "react";
 import { t } from "ttag";
-import ChoroplethMap, {
-  getColorplethColorScale,
-} from "../components/ChoroplethMap";
+import ChoroplethMap from "../components/ChoroplethMap";
 import PinMap from "../components/PinMap";
 import LeafletGridHeatMap from "../components/LeafletGridHeatMap";
 
@@ -31,8 +29,7 @@ import _ from "underscore";
 
 const PIN_MAP_TYPES = new Set(["pin", "heat", "grid"]);
 
-import { getAccentColors } from "metabase/lib/colors/groups";
-import ColorRangeSelector from "metabase/core/components/ColorRangeSelector";
+import RegionMapConditions from "metabase/components/RegionMapConditions";
 
 export default class Map extends Component {
   static uiName = t`Map`;
@@ -253,20 +250,11 @@ export default class Map extends Component {
       title: t`Region field`,
       getHidden: (series, vizSettings) => vizSettings["map.type"] !== "region",
     }),
-    "map.colors": {
-      title: t`Color`,
-      widget: ColorRangeSelector,
-      props: {
-        colors: getAccentColors(),
-        colorMapping: Object.fromEntries(
-          getAccentColors().map(color => [
-            color,
-            getColorplethColorScale(color),
-          ]),
-        ),
-        isQuantile: true,
-      },
-      default: getColorplethColorScale(getAccentColors()[0]),
+    "map.region_conditions": {
+      title: t`Conditions`,
+      widget: RegionMapConditions,
+      props: {},
+      default: null,
       getHidden: (series, vizSettings) => vizSettings["map.type"] !== "region",
     },
     "map.zoom": {},
