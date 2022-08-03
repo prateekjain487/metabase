@@ -49,7 +49,8 @@ export function getColorplethColorScale(
       .string();
   }
 
-  return colors;
+  // return colors;
+  return ["green", "yellow", "red"];
 }
 
 const geoJsonCache = new Map();
@@ -88,9 +89,15 @@ function shouldUseCompactFormatting(groups, formatMetric) {
   const maxValues = groups.slice(0, -1).map(group => group[group.length - 1]);
   const allValues = minValues.concat(maxValues);
   const formattedValues = allValues.map(value => formatMetric(value, false));
+  console.log(formattedValues);
   const averageLength =
     formattedValues.reduce((sum, { length }) => sum + length, 0) /
     formattedValues.length;
+  console.log(
+    averageLength,
+    formattedValues.reduce((sum, { length }) => sum + length, 0),
+    formattedValues.length,
+  );
   return averageLength > AVERAGE_LENGTH_CUTOFF;
 }
 
@@ -118,6 +125,24 @@ export default class ChoroplethMap extends Component {
     this.state = {
       geoJson: null,
       geoJsonPath: null,
+      mode: "CUSTOM", //COLOR, GROUP, CUSTOM,
+      groupConfigurations: [
+        {
+          start: 0,
+          end: 41,
+          color: "#FF0000",
+        },
+        {
+          start: 42,
+          end: 69,
+          color: "#00FF00",
+        },
+        {
+          start: 70,
+          end: 194,
+          color: "#0000FF",
+        },
+      ],
     };
   }
 
@@ -173,7 +198,8 @@ export default class ChoroplethMap extends Component {
       settings,
     } = this.props;
     const { geoJson, minimalBounds } = this.state;
-
+    const { "map.region_conditions": region_conditions } = settings;
+    console.log(region_conditions);
     // special case builtin maps to use legacy choropleth map
     let projection, projectionFrame;
     // projectionFrame is the lng/lat of the top left and bottom right corners
@@ -315,15 +341,114 @@ export default class ChoroplethMap extends Component {
     const domain = Array.from(domainSet);
 
     const _heatMapColors = settings["map.colors"] || HEAT_MAP_COLORS;
-    const heatMapColors = _heatMapColors.slice(-domain.length);
+    let heatMapColors = _heatMapColors.slice(-domain.length);
 
-    const groups = ss.ckmeans(domain, heatMapColors.length);
-    const groupBoundaries = groups.slice(1).map(cluster => cluster[0]);
+    let groups = ss.ckmeans(domain, heatMapColors.length);
 
-    const colorScale = d3.scale
-      .threshold()
-      .domain(groupBoundaries)
-      .range(heatMapColors);
+    domain.sort(function (a, b) {
+      return a - b;
+    });
+    if (region_conditions && region_conditions.mode === "CUSTOM") {
+      const g = region_conditions.rules.filter(
+        g => !!g.start && !!g.end && !!g.color,
+      );
+      groups = g.map((a, index) => {
+        const start = parseFloat(a.start);
+        const end = parseFloat(a.end);
+        const set = [];
+        domain.forEach((d, index) => {
+          if (
+            d >= start &&
+            ((d === end && index === domain.length - 1) || d < end)
+          ) {
+            set.push(d);
+          }
+        });
+        return set;
+      });
+      heatMapColors = region_conditions.rules
+        .filter(
+          (g, index) =>
+            !!g.start && !!g.end && !!g.color && groups[index].length,
+        )
+        .map(g => {
+          return g.color;
+        });
+      groups = groups.filter(a => a.length);
+      console.log(heatMapColors, groups, region_conditions.rules, g);
+    }
+    if (region_conditions && region_conditions.mode === "RANGE") {
+      heatMapColors = region_conditions.rules
+        .filter(g => !!g.color)
+        .map(g => {
+          return g.color;
+        });
+
+      console.log(heatMapColors);
+      const g = [];
+      const START = domain[0];
+      const END = domain[domain.length - 1];
+      for (let i = 0; i < heatMapColors.length; i++) {
+        const start = g[0] ? g[g.length - 1].end : START;
+        const end = heatMapColors[i + 1]
+          ? start + Math.ceil((END - START) / heatMapColors.length)
+          : END;
+        g.push({
+          start,
+          end,
+        });
+      }
+
+      console.log(g);
+      groups = g
+        .map((a, index) => {
+          const start = parseFloat(a.start);
+          const end = parseFloat(a.end);
+          const set = [];
+          domain.forEach((d, index) => {
+            if (
+              d >= start &&
+              ((d === end && index === domain.length - 1) || d < end)
+            ) {
+              set.push(d);
+            }
+          });
+          return set;
+        })
+        .filter(set => {
+          return set.length;
+        });
+      console.log(groups);
+    }
+    if (region_conditions && region_conditions.mode === "COLOR") {
+      heatMapColors = region_conditions.rules
+        .filter(g => !!g.color)
+        .map(g => {
+          return g.color;
+        });
+
+      const list = JSON.parse(JSON.stringify(domain));
+      const g = [];
+      const partsIndex = Math.ceil(list.length / heatMapColors.length);
+      for (let i = 0; i < heatMapColors.length - 1; i++) {
+        g.unshift(list.splice(-partsIndex));
+      }
+      g.unshift(list);
+      groups = g;
+    }
+    // const colorScale = d3.scale
+    //   .threshold()
+    //   .domain(groupBoundaries)
+    //   .range(heatMapColors);
+    const colorScale = v => {
+      let c = -1;
+      groups.forEach((g, index) => {
+        if (g.indexOf(v) > -1) {
+          c = index;
+        }
+      });
+      return heatMapColors[c] || HEAT_MAP_ZERO_COLOR;
+    };
 
     const columnSettings = settings.column(cols[metricIndex]);
     const legendTitles = getLegendTitles(groups, columnSettings);
