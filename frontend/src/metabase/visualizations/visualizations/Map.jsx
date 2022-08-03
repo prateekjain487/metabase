@@ -250,22 +250,6 @@ export default class Map extends Component {
       title: t`Region field`,
       getHidden: (series, vizSettings) => vizSettings["map.type"] !== "region",
     }),
-    // "map.colors": {
-    //   title: t`Color`,
-    //   widget: ColorRangeSelector,
-    //   props: {
-    //     colors: getAccentColors(),
-    //     colorMapping: Object.fromEntries(
-    //       getAccentColors().map(color => [
-    //         color,
-    //         getColorplethColorScale(color),
-    //       ]),
-    //     ),
-    //     isQuantile: true,
-    //   },
-    //   default: getColorplethColorScale(getAccentColors()[0]),
-    //   getHidden: (series, vizSettings) => vizSettings["map.type"] !== "region",
-    // },
     "map.region_conditions": {
       title: t`Conditions`,
       widget: RegionMapConditions,

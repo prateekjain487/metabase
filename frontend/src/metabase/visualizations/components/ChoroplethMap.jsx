@@ -89,15 +89,9 @@ function shouldUseCompactFormatting(groups, formatMetric) {
   const maxValues = groups.slice(0, -1).map(group => group[group.length - 1]);
   const allValues = minValues.concat(maxValues);
   const formattedValues = allValues.map(value => formatMetric(value, false));
-  console.log(formattedValues);
   const averageLength =
     formattedValues.reduce((sum, { length }) => sum + length, 0) /
     formattedValues.length;
-  console.log(
-    averageLength,
-    formattedValues.reduce((sum, { length }) => sum + length, 0),
-    formattedValues.length,
-  );
   return averageLength > AVERAGE_LENGTH_CUTOFF;
 }
 
@@ -199,7 +193,6 @@ export default class ChoroplethMap extends Component {
     } = this.props;
     const { geoJson, minimalBounds } = this.state;
     const { "map.region_conditions": region_conditions } = settings;
-    console.log(region_conditions);
     // special case builtin maps to use legacy choropleth map
     let projection, projectionFrame;
     // projectionFrame is the lng/lat of the top left and bottom right corners
@@ -375,7 +368,6 @@ export default class ChoroplethMap extends Component {
           return g.color;
         });
       groups = groups.filter(a => a.length);
-      console.log(heatMapColors, groups, region_conditions.rules, g);
     }
     if (region_conditions && region_conditions.mode === "RANGE") {
       heatMapColors = region_conditions.rules
@@ -418,7 +410,6 @@ export default class ChoroplethMap extends Component {
         .filter(set => {
           return set.length;
         });
-      console.log(groups);
     }
     if (region_conditions && region_conditions.mode === "COLOR") {
       heatMapColors = region_conditions.rules
